@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<h1>Analytics & Reports</h1>
+
+<div class="card">
+    <h2>Inventory by Category</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Product Count</th>
+                <th>Total Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in category_data %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Top Suppliers Performance</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Supplier Name</th>
+                <th>Total Orders</th>
+                <th>Total Value</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in top_suppliers %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>${{ "%.2f"|format(row[2]) }}</td>
+                <td>{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Warehouse Utilization</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Warehouse</th>
+                <th>Capacity</th>
+                <th>Items Stored</th>
+                <th>Utilization %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in warehouse_util %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ "%.2f"|format(row[3]) if row[3] else '0.00' }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Orders by Status</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Order Count</th>
+                <th>Total Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in order_status %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>${{ "%.2f"|format(row[2]) if row[2] else '0.00' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Products Needing Reorder</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Warehouse</th>
+                <th>Current Quantity</th>
+                <th>Reorder Level</th>
+                <th>Shortage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in reorder_needed %}
+            <tr style="background: #fff3cd;">
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td><strong>{{ row[4] }}</strong></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #27ae60;">All products are well stocked!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
