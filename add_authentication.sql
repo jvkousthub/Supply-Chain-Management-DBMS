@@ -1,6 +1,3 @@
--- Add User Authentication Tables to Existing Schema
--- Run this AFTER schema.sql has been executed
-
 -- Create app_users table
 CREATE TABLE app_users (
     user_id NUMBER PRIMARY KEY,
@@ -31,10 +28,7 @@ CREATE TABLE audit_log (
 
 CREATE SEQUENCE log_seq START WITH 1 INCREMENT BY 1;
 
--- Insert default users
--- All passwords are 'password123' (hashed as SHA-256)
--- Hash: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f
-
+-- Default users (password: password123)
 INSERT INTO app_users (user_id, username, password, full_name, email, role, is_active)
 VALUES (user_seq.NEXTVAL, 'admin', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 
         'System Administrator', 'admin@scm.com', 'ADMIN', 1);

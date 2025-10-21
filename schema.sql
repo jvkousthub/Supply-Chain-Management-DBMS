@@ -1,5 +1,3 @@
--- Supply Chain Management Database Schema
-
 -- Drop existing tables
 DROP TABLE shipments CASCADE CONSTRAINTS;
 DROP TABLE order_details CASCADE CONSTRAINTS;

@@ -51,53 +51,31 @@ A full-stack web application for managing supply chain operations with **role-ba
    ```cmd
    setup.bat
    ```
-   This will:   - Create a virtual environment
+   This installs all dependencies and creates virtual environment.
 
-   setup.bat   - Install all dependencies
-
-   ```   - Create a `.env` file template
-
-   This will:
-
-   - Create a virtual environment3. **Configure database**
-
-   - Install all dependencies   
-
-   - Create a `.env` file template   Edit `.env` file with your Oracle credentials:
-
+3. **Configure database**
+   
+   Edit `.env` file with your Oracle credentials:
    ```properties
-
-3. **Configure database**   DB_USER=your_username
-
-      DB_PASSWORD=your_password
-
-   Edit `.env` file with your Oracle credentials:   DB_DSN=localhost:1521/XEPDB1
-
-   ```properties   SECRET_KEY=your-secret-key
-
-   DB_USER=system   ```
-
+   DB_USER=system
    DB_PASSWORD=your_password
+   DB_DSN=localhost:1521/XE
+   SECRET_KEY=your-secret-key-here
+   ```
 
-   DB_DSN=localhost:1521/XE4. **Create database schema**
-
-   SECRET_KEY=your-secret-key   
-
-   ```   Connect to Oracle and run:
-
+4. **Run SQL scripts**
+   
+   Connect to Oracle as system user:
    ```sql
+   sqlplus system/your_password@localhost:1521/XE
+   
+   SQL> @schema.sql
+   SQL> @sample_data.sql
+   SQL> @add_authentication.sql
+   SQL> exit
+   ```
 
-4. **Create database schema**   @schema.sql
-
-      @sample_data.sql
-
-   Connect to Oracle and run:   ```
-
-   ```sql
-
-   sqlplus system/your_password@localhost:1521/XE5. **Start the application**
-
-   - Install Python dependencies
+5. **Start the application**
    - Create virtual environment
    - Configure database connection
 
@@ -142,10 +120,10 @@ A full-stack web application for managing supply chain operations with **role-ba
 
 | Role          | View All | Add Items | Edit Items | Delete Items | Update Inventory | Manage Users |
 |------         |----------|-----------|------------|--------------|------------------|--------------|
-| **ADMIN**     | ✅ Yes   | ✅ Yes    | ✅ Yes    | ✅ Yes       | ✅ Yes          | ✅ Yes |
-| **MANAGER**   | ✅ Yes   | ✅ Yes    | ✅ Yes    | ❌ No        | ✅ Yes          | ❌ No |
-| **WAREHOUSE** | ✅ Yes   | ❌ No     | ❌ No*    | ❌ No        | ✅ Yes*         | ❌ No |
-| **VIEWER**    | ✅ Yes   | ❌ No     | ❌ No     | ❌ No        | ❌ No           | ❌ No |
+| **ADMIN**     | Yes      | Yes       | Yes        | Yes          | Yes              | Yes          |
+| **MANAGER**   | Yes      | Yes       | Yes        | No           | Yes              | No           |
+| **WAREHOUSE** | Yes      | No        | No*        | No           | Yes*             | No           |
+| **VIEWER**    | Yes      | No        | No         | No           | No               | No           |
 
 *WAREHOUSE role can only edit/update inventory quantities, nothing else.
 
@@ -198,427 +176,305 @@ A full-stack web application for managing supply chain operations with **role-ba
 
 ├── setup.bat                   # Installation script- View order details and history
 
-├── ROLE_TESTING_GUIDE.md       # Complete testing guide for roles
-├── templates/                  # HTML templates with role-based UI
-│   ├── base.html               # Base template with navbar
-│   ├── login.html              # Authentication page
-│   ├── users.html              # User management (Admin)
-│   ├── suppliers.html          # Supplier listing
-│   ├── products.html           # Product catalog
-│   ├── warehouses.html         # Warehouse management
-│   ├── inventory.html          # Stock levels
-│   ├── orders.html             # Order listing
-│   └── analytics.html          # Dashboard with charts
-├── setup.bat                   # Installation script
 └── run.bat                     # Start script
+
+```### Analytics
+
+- Inventory by category (GROUP BY)
+
+## Database Schema- Top suppliers by order value (aggregates)
+
+- Warehouse utilization (subqueries)
+
+### Main Tables- Products needing reorder (HAVING clause)
+
+1. **suppliers** - Supplier information with ratings
+
+2. **warehouses** - Warehouse locations and capacity## SQL Features Demonstrated
+
+3. **products** - Product catalog with categories
+
+4. **inventory** - Stock levels with reorder points- **Joins**: INNER, LEFT, RIGHT
+
+5. **orders** - Purchase orders with status tracking- **Aggregates**: COUNT, SUM, AVG, MIN, MAX
+
+6. **order_details** - Order line items- **Group By & Having**: Category analysis
+
+7. **shipments** - Delivery tracking- **Subqueries**: Nested SELECT statements
+
+8. **app_users** - User accounts with roles- **Views**: Reusable query abstractions
+
+9. **audit_log** - Action tracking with timestamps- **Indexes**: Performance optimization
+
+- **Sequences**: Auto-increment IDs
+
+### Views- **Constraints**: PRIMARY KEY, FOREIGN KEY, CHECK
+
+- **low_stock_items** - Products below reorder level
+
+- **order_summary** - Order aggregates by status## Development
+
+- **supplier_performance** - Supplier ratings and order counts
+
+### Running in Debug Mode
+
+### SequencesFlask debug mode is enabled by default in `app.py`:
+
+- `supplier_seq`, `product_seq`, `warehouse_seq`, `inventory_seq````python
+
+- `order_seq`, `detail_seq`, `shipment_seq`app.run(debug=True, port=5000)
+
+- `user_seq`, `log_seq````
+
+
+
+## Usage### Environment Variables
+
+- `DB_USER`: Oracle username
+
+### Authentication- `DB_PASSWORD`: Oracle password
+
+- All routes require login (except `/login`)- `DB_DSN`: Database connection string
+
+- Sessions persist until logout- `SECRET_KEY`: Flask session secret
+
+- Automatic last login tracking- `FLASK_ENV`: development/production
+
+
+
+### Managing Users (Admin Only)## Troubleshooting
+
+- Create new users with assigned roles
+
+- Activate/deactivate user accounts### Database Connection Failed
+
+- View user activity and last login1. Verify Oracle service is running
+
+2. Check credentials in `.env`
+
+### Managing Suppliers3. Test connection with SQL*Plus:
+
+- View all suppliers with ratings   ```
+
+- Add new suppliers with contact information   sqlplus username/password@localhost:1521/XEPDB1
+
+- Update supplier details   ```
+
+- Delete suppliers (Admin only)
+
+### Import Errors
+
+### Inventory ManagementRun setup again:
+
+- Monitor stock levels across all warehouses```cmd
+
+- View low-stock alertssetup.bat
+
+- Update quantities (Admin, Manager, Warehouse)```
+
+- Track last updated timestamps
+
+### Tables Not Found
+
+### Order ProcessingRun the schema creation:
+
+- Create new orders with delivery dates```sql
+
+- Add products to orders@schema.sql
+
+- Update order status: PENDING → CONFIRMED → SHIPPED → DELIVERED```
+
+- View complete order details and history
+
+## License
+
+### Analytics
+
+- Inventory by category (GROUP BY)This project is for educational purposes.
+
+- Top suppliers by order value (aggregates)
+
+- Warehouse utilization (subqueries)## Author
+
+- Products needing reorder (HAVING clause)
+
+- Order statistics by statusCreated as a Database Management Systems (DBMS) project demonstrating Oracle SQL and Flask integration.
+
+
+## Oracle DCL Implementation
+
+The system demonstrates comprehensive Oracle DCL features:
+
+### User Creation
+```sql
+CREATE USER scm_admin IDENTIFIED BY Admin@123;
+CREATE USER scm_manager IDENTIFIED BY Manager@123;
+CREATE USER scm_warehouse IDENTIFIED BY Warehouse@123;
+CREATE USER scm_viewer IDENTIFIED BY Viewer@123;
 ```
 
-## Database Schema
+### Grant Permissions
+```sql
+-- Admin gets full access
+GRANT CONNECT, RESOURCE TO scm_admin;
 
-### Main Tables
+-- Manager gets selective permissions
+GRANT SELECT, INSERT, UPDATE ON suppliers TO scm_manager;
 
-1. **suppliers** - Supplier information with contact details and ratings
-2. **warehouses** - Warehouse locations with capacity and manager info
-3. **products** - Product catalog with categories and pricing
-4. **inventory** - Stock levels with reorder points and last updated
-5. **orders** - Purchase orders with status tracking and delivery dates
-6. **order_details** - Order line items with quantities and pricing
-7. **shipments** - Delivery tracking with carrier and tracking numbers
-8. **app_users** - User accounts with roles and password hashes
-9. **audit_log** - Complete action tracking with timestamps and IP addresses
+-- Warehouse limited to inventory
+GRANT SELECT, UPDATE ON inventory TO scm_warehouse;
 
-### Views
+-- Viewer read-only
+GRANT SELECT ON all_tables TO scm_viewer;
+```
 
-- **low_stock_items** - Products below reorder level (requires immediate attention)
-- **order_summary** - Order aggregates by status with totals
-- **supplier_performance** - Supplier ratings and order counts with performance metrics
-
-### Sequences
-
-- `supplier_seq`, `product_seq`, `warehouse_seq`, `inventory_seq`
-- `order_seq`, `detail_seq`, `shipment_seq`
-- `user_seq`, `log_seq`
-
-### Indexes
-
-- `idx_inventory_product` - Fast product lookups in inventory
-- `idx_inventory_warehouse` - Warehouse-based inventory queries
-- `idx_product_supplier` - Supplier product relationships
-- `idx_order_supplier` - Order history by supplier
-- `idx_order_status` - Filter orders by status
-- `idx_shipment_order` - Track shipments by order
-
-## Usage
-
-### Authentication Flow
-
-1. **Login** - Navigate to `http://localhost:5000` (redirects to login)
-2. **Enter credentials** - Use one of the default accounts or admin-created accounts
-3. **Session management** - Stays logged in until logout or session expires
-4. **Automatic tracking** - All actions logged with user, timestamp, and IP
-
-### Managing Users (Admin Only)
-
-- **Create users** - Add new users with assigned roles
-- **Activate/deactivate** - Toggle user account status
-- **View activity** - See last login times and user details
-- **Audit logs** - Review complete action history
-
-### Managing Suppliers (Admin/Manager)
-
-- **View all** - List all suppliers with ratings and contact info
-- **Add new** - Create supplier records with full details
-- **Edit** - Update supplier information (Admin/Manager only)
-- **Delete** - Remove suppliers (Admin only)
-
-### Product Management (Admin/Manager)
-
-- **View catalog** - Browse all products with categories
-- **Add products** - Create new product entries
-- **Delete** - Remove products from catalog (Admin only)
-
-### Inventory Management (Admin/Manager/Warehouse)
-
-- **Monitor stock** - View current levels across all warehouses
-- **Low stock alerts** - Identify products needing reorder
-- **Update quantities** - Adjust stock levels (all three roles can do this)
-- **Track changes** - Last updated timestamps for all items
-
-### Order Processing (Admin/Manager)
-
-- **View orders** - List all purchase orders with status
-- **Create orders** - Generate new purchase orders
-- **Update status** - Change order status (Pending → Confirmed → Shipped → Delivered)
-- **View details** - See line items and totals for each order
-
-### Analytics & Reports (All Users)
-
-- **Inventory by category** - GROUP BY analysis
-- **Top suppliers** - Order value aggregates
-- **Warehouse utilization** - Capacity vs current stock
-- **Products needing reorder** - HAVING clause filters
-- **Order status distribution** - Visual breakdown
+### Revoke Permissions
+```sql
+REVOKE DELETE ON suppliers FROM scm_manager;
+REVOKE INSERT ON products FROM scm_warehouse;
+```
 
 ## SQL Features Demonstrated
 
-### DDL (Data Definition Language)
-- CREATE TABLE with constraints
-- ALTER TABLE operations
-- CREATE INDEX for performance
-- CREATE SEQUENCE for auto-increment
-- CREATE VIEW for reusable queries
-
-### DML (Data Manipulation Language)
-- INSERT with sequences
-- UPDATE with conditions
-- DELETE with cascading
-- MERGE for upserts
-
-### DQL (Data Query Language)
-- **Joins**: INNER, LEFT, RIGHT, FULL OUTER
+- **DDL**: CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE INDEX, ALTER TABLE
+- **DML**: INSERT, UPDATE, DELETE with constraints
+- **DQL**: Complex SELECT with JOINs (INNER, LEFT, RIGHT)
+- **DCL**: CREATE USER, GRANT, REVOKE permissions
+- **TCL**: COMMIT, ROLLBACK, SAVEPOINT
 - **Aggregates**: COUNT, SUM, AVG, MIN, MAX
 - **Group By & Having**: Category and status analysis
-- **Subqueries**: Nested SELECT for complex filtering
-- **Order By**: Sorting results
+- **Subqueries**: Nested SELECT for complex calculations
+- **Views**: Reusable query abstractions
+- **Indexes**: Performance optimization
+- **Sequences**: Auto-increment primary keys
+- **Constraints**: PRIMARY KEY, FOREIGN KEY, CHECK, UNIQUE
 
-### DCL (Data Control Language)
-- CREATE USER statements
-- GRANT permissions by role
-- REVOKE access rights
-- Role-based security model
+## Security Features
 
-### TCL (Transaction Control Language)
-- COMMIT for saving changes
-- ROLLBACK for undoing
-- SAVEPOINT for partial rollbacks
-- Transaction isolation
+1. **Password Hashing**: All passwords stored as SHA-256 hashes
+2. **Session Management**: Secure Flask sessions with secret key
+3. **Role Validation**: Decorator-based permission checks on every route
+4. **Audit Trail**: Complete log of all user actions with IP addresses
+5. **Active Status**: Ability to deactivate users without deletion
+6. **Protected Routes**: Login required for all operations
 
 ## Development
 
 ### Running in Debug Mode
-
-Flask debug mode is enabled by default in `app.py`:
 ```python
-app.run(debug=True, port=5000)
+# app.py
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
 ```
 
 ### Environment Variables
+- `DB_USER`: Oracle username (e.g., system)
+- `DB_PASSWORD`: Oracle password
+- `DB_DSN`: Database connection string (e.g., localhost:1521/XE)
+- `SECRET_KEY`: Flask session secret (change in production!)
+- `FLASK_ENV`: development or production
 
-Create a `.env` file with:
+### Adding New Users
+Login as admin and navigate to **Users** → **Add New User**
+
+### Changing Passwords
+```python
+import hashlib
+new_password = "your_new_password"
+hashed = hashlib.sha256(new_password.encode()).hexdigest()
+# Update in database: UPDATE app_users SET password = 'hash' WHERE username = 'user';
 ```
-DB_USER=system
-DB_PASSWORD=your_password
-DB_DSN=localhost:1521/XE
-SECRET_KEY=your-secret-key-change-this
-FLASK_ENV=development
-```
-
-### Testing Roles
-
-See `ROLE_TESTING_GUIDE.md` for comprehensive testing scenarios for each user role.
 
 ## Troubleshooting
 
 ### Database Connection Failed
-
 1. Verify Oracle service is running:
    ```cmd
-   services.msc
-   # Look for OracleServiceXE or similar
+   net start OracleServiceXE
    ```
-
-2. Check credentials match in your setup
-
-3. Test connection with SQL*Plus:
+2. Check credentials in `.env`
+3. Test connection:
    ```cmd
    sqlplus system/password@localhost:1521/XE
    ```
 
-### Import Errors
+### Login Fails
+- Verify `add_authentication.sql` was run
+- Check default password hash matches
+- Ensure `app_users` table exists
 
-Run setup again to reinstall dependencies:
+### Permission Denied
+- Check user's role in database
+- Verify session is active
+- Try logging out and back in
+
+### Import Errors
 ```cmd
 setup.bat
 ```
 
 ### Tables Not Found
-
-Ensure all SQL scripts were executed:
 ```sql
-sqlplus system/password@localhost:1521/XE
-SQL> @schema.sql
-SQL> @sample_data.sql
-SQL> @add_authentication.sql
+@schema.sql
+@add_authentication.sql
 ```
 
-### Permission Denied Errors
+## Production Deployment
 
-- Verify you're logged in with the correct role
-- Check that decorators are properly applied in `app.py`
-- Review `auth.py` permissions matrix
-- Test with admin account first
+### Security Checklist
+- [ ] Change all default passwords
+- [ ] Use strong `SECRET_KEY` in `.env`
+- [ ] Enable HTTPS
+- [ ] Implement password complexity requirements
+- [ ] Add session timeouts
+- [ ] Regular audit log reviews
+- [ ] Backup database regularly
+- [ ] Use environment-specific `.env` files
 
-```
+## API Routes
 
-### Session Expired
+### Public
+- `GET/POST /login` - User authentication
 
-- Sessions expire after inactivity
-- Simply log in again to continue
-
-## Oracle DCL Implementation
-
-The system demonstrates comprehensive Oracle DCL (Data Control Language) features through two mechanisms:
-
-### 1. Oracle Native Users (user_roles_dcl.sql)
-
-Creates actual Oracle database users with role-based permissions:
-
-```sql
--- Create Oracle users
-CREATE USER scm_admin IDENTIFIED BY Admin@123;
-CREATE USER scm_manager IDENTIFIED BY Manager@123;
-CREATE USER scm_warehouse IDENTIFIED BY Warehouse@123;
-CREATE USER scm_viewer IDENTIFIED BY Viewer@123;
-
--- Admin: Full access
-GRANT CONNECT, RESOURCE, DBA TO scm_admin;
-GRANT ALL PRIVILEGES ON suppliers TO scm_admin;
-
--- Manager: Selective permissions
-GRANT CONNECT, RESOURCE TO scm_manager;
-GRANT SELECT, INSERT, UPDATE ON suppliers TO scm_manager;
-GRANT SELECT, INSERT, UPDATE ON products TO scm_manager;
--- No DELETE privileges
-
--- Warehouse: Limited to inventory
-GRANT CONNECT TO scm_warehouse;
-GRANT SELECT, UPDATE ON inventory TO scm_warehouse;
--- Can only view and update stock levels
-
--- Viewer: Read-only access
-GRANT CONNECT TO scm_viewer;
-GRANT SELECT ON suppliers TO scm_viewer;
-GRANT SELECT ON products TO scm_viewer;
-GRANT SELECT ON inventory TO scm_viewer;
-```
-
-### 2. Application-Level Users (add_authentication.sql)
-
-Creates app_users table for web application authentication:
-
-```sql
-CREATE TABLE app_users (
-    user_id NUMBER PRIMARY KEY,
-    username VARCHAR2(50) UNIQUE NOT NULL,
-    password VARCHAR2(256) NOT NULL,  -- SHA-256 hash
-    full_name VARCHAR2(100),
-    email VARCHAR2(100),
-    role VARCHAR2(20) CHECK (role IN ('ADMIN', 'MANAGER', 'WAREHOUSE', 'VIEWER')),
-    is_active NUMBER(1) DEFAULT 1,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
-);
-```
-
-**Default accounts** (all use password: `password123`):
-- admin / Manager role
-- manager / Manager role  
-- warehouse / Warehouse operations
-- viewer / Read-only access
-
-## API Routes Reference
-
-### Public Routes
-- `GET/POST /login` - User authentication page
-
-### Protected Routes (Login Required)
-
-#### Dashboard & Analytics
-- `GET /` - Main dashboard
-- `GET /analytics` - Reports and visualizations
-
-#### Supplier Management
-- `GET /suppliers` - List all suppliers
-- `GET/POST /suppliers/add` - Add supplier (Admin, Manager)
-- `GET/POST /suppliers/edit/<id>` - Edit supplier (Admin, Manager)
+### Protected (Login Required)
+- `GET /` - Dashboard
+- `GET /suppliers` - View suppliers
+- `POST /suppliers/add` - Add supplier (Admin, Manager)
 - `POST /suppliers/delete/<id>` - Delete supplier (Admin only)
+- `GET /inventory` - View inventory
+- `POST /inventory/update/<id>` - Update stock (Admin, Manager, Warehouse)
+- `GET /orders` - View orders
+- `GET /analytics` - View reports
 
-#### Product Management
-- `GET /products` - List all products
-- `GET/POST /products/add` - Add product (Admin, Manager)
-- `POST /products/delete/<id>` - Delete product (Admin only)
-
-#### Warehouse Management
-- `GET /warehouses` - List warehouses
-- `GET/POST /warehouses/add` - Add warehouse (Admin, Manager)
-
-#### Inventory Management
-- `GET /inventory` - View stock levels
-- `GET /inventory/low-stock` - Low stock alerts
-- `POST /inventory/update/<id>` - Update quantity (Admin, Manager, Warehouse)
-
-#### Order Management
-- `GET /orders` - List all orders
-- `GET/POST /orders/create` - Create order (Admin, Manager)
-- `GET /orders/<id>` - View order details
-- `POST /orders/status/<id>` - Update status (Admin, Manager)
-
-#### User Management (Admin Only)
+### Admin Only
 - `GET /users` - View all users
 - `GET/POST /users/add` - Create new user
 - `POST /users/toggle/<id>` - Activate/deactivate user
 
 ## Testing
 
-### Role Testing
+Test different roles to verify access control:
 
-Comprehensive testing guide available in `ROLE_TESTING_GUIDE.md`. Quick test checklist:
-
-1. **Login as admin** → Should see all features including Users menu
-2. **Login as manager** → Should see Add/Edit buttons but no Delete buttons
-3. **Login as warehouse** → Should only see inventory update forms
-4. **Login as viewer** → Should see data but no action buttons
-
-### Verification Queries
-
-```sql
--- Check user accounts
-SELECT user_id, username, role, is_active, last_login 
-FROM app_users 
-ORDER BY role;
-
--- View recent audit logs
-SELECT username, action, table_name, 
-       TO_CHAR(action_time, 'YYYY-MM-DD HH24:MI:SS') as time
-FROM audit_log 
-ORDER BY log_id DESC 
-FETCH FIRST 20 ROWS ONLY;
-
--- Count actions by user
-SELECT username, COUNT(*) as total_actions
-FROM audit_log
-GROUP BY username
-ORDER BY total_actions DESC;
-
--- Check low stock items
-SELECT * FROM low_stock_items;
-
--- Supplier performance
-SELECT * FROM supplier_performance;
-```
-
-## Production Deployment
-
-### Pre-Deployment Checklist
-
-- [ ] Change all default passwords (admin, manager, warehouse, viewer)
-- [ ] Generate strong `SECRET_KEY` for Flask sessions
-- [ ] Update database credentials in `.env`
-- [ ] Enable HTTPS/SSL for web traffic
-- [ ] Implement password complexity requirements
-- [ ] Configure session timeouts (default: 24 hours)
-- [ ] Set up regular audit log reviews
-- [ ] Implement automated database backups
-- [ ] Use production-grade WSGI server (Gunicorn/uWSGI)
-- [ ] Configure Oracle for production workload
-
-### Environment-Specific Configuration
-
-**Development (.env):**
-```env
-DB_USER=system
-DB_PASSWORD=your_dev_password
-DB_DSN=localhost:1521/XE
-SECRET_KEY=dev-secret-key
-FLASK_ENV=development
-```
-
-**Production (.env):**
-```env
-DB_USER=scm_prod_user
-DB_PASSWORD=strong_prod_password_here
-DB_DSN=prod-db-server:1521/PROD
-SECRET_KEY=generate-strong-random-secret
-FLASK_ENV=production
-```
-
-### Recommended Production Changes
-
-1. **Disable Flask debug mode** in `app.py`:
-   ```python
-   app.run(debug=False, host='0.0.0.0', port=5000)
-   ```
-
-2. **Add password complexity validation** in `auth.py`
-
-3. **Implement session timeout** in Flask config
-
-4. **Enable HTTPS** with SSL certificates
-
-5. **Set up monitoring** for audit logs
+1. **Admin**: Full access, can delete records, manage users
+2. **Manager**: Can add/edit but not delete
+3. **Warehouse**: Only inventory operations
+4. **Viewer**: Read-only everywhere
 
 ## License
 
-This project is created for educational purposes as part of a Database Management Systems (DBMS) course.
+This project is for educational purposes as a DBMS coursework demonstration.
 
 ## Author
 
-Created by [jvkousthub](https://github.com/jvkousthub)
+Created by [jvkousthub](https://github.com/jvkousthub) - Database Management Systems project demonstrating Oracle SQL integration with Flask web application and enterprise-grade authentication.
 
-**Project Type:** Database Management Systems coursework  
-**Purpose:** Demonstrate Oracle SQL integration with Flask web framework  
-**Features:** Complete CRUD operations, role-based access control, and enterprise-grade authentication
+## Screenshots
 
-## Key Highlights
-
-✅ **Complete SQL Implementation** - DDL, DML, DQL, DCL, TCL  
-✅ **Role-Based Access Control** - 4 distinct user roles with granular permissions  
-✅ **Security First** - Password hashing, session management, audit logging  
-✅ **Professional UI** - Clean navy blue theme with responsive design  
-✅ **Production Ready** - Error handling, validation, and comprehensive testing  
+*Login page with role-based authentication*
+*Dashboard with user information and role badge*
+*User management interface (admin only)*
+*Inventory management with permission-based actions*
 
 ---
 
-**⭐ If this project helped you understand database concepts or Flask integration, please star the repository!**
-
-**📚 For detailed testing procedures, see:** `ROLE_TESTING_GUIDE.md`
+**Star this repository if you found it helpful!**

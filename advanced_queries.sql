@@ -1,6 +1,4 @@
--- Advanced Queries with Aggregates, GROUP BY, HAVING, and Nested Subqueries
-
--- 1. Total inventory value by warehouse
+-- Total inventory value by warehouse
 SELECT 
     w.name AS warehouse_name,
     COUNT(DISTINCT i.product_id) AS product_count,
