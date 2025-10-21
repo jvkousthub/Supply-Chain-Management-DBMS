@@ -152,11 +152,23 @@ class Database:
         return self.execute_query(query)
     
     def create_order(self, supplier_id, warehouse_id, delivery_date):
-        query = """
-        INSERT INTO orders (order_id, supplier_id, warehouse_id, delivery_date)
-        VALUES (order_seq.NEXTVAL, :1, :2, TO_DATE(:3, 'YYYY-MM-DD'))
-        """
-        return self.execute_update(query, (supplier_id, warehouse_id, delivery_date))
+        cursor = self.connection.cursor()
+        try:
+            order_id = cursor.var(int)
+            query = """
+            INSERT INTO orders (order_id, supplier_id, warehouse_id, delivery_date)
+            VALUES (order_seq.NEXTVAL, :1, :2, TO_DATE(:3, 'YYYY-MM-DD'))
+            RETURNING order_id INTO :4
+            """
+            cursor.execute(query, (supplier_id, warehouse_id, delivery_date, order_id))
+            self.connection.commit()
+            return order_id.getvalue()[0]
+        except oracledb.Error as error:
+            self.connection.rollback()
+            print(f"Create order error: {error}")
+            return None
+        finally:
+            cursor.close()
     
     def add_order_detail(self, order_id, product_id, quantity, unit_price):
         subtotal = quantity * unit_price

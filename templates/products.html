@@ -5,9 +5,11 @@
 {% block content %}
 <h1>Products</h1>
 
+{% if permissions and permissions.can_add %}
 <div class="actions">
     <a href="{{ url_for('add_product') }}" class="btn btn-success">Add New Product</a>
 </div>
+{% endif %}
 
 <table>
     <thead>
@@ -18,7 +20,9 @@
             <th>Supplier</th>
             <th>Price</th>
             <th>Description</th>
+            {% if permissions and permissions.can_delete %}
             <th>Actions</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -30,12 +34,14 @@
             <td>{{ product[5] }}</td>
             <td>${{ "%.2f"|format(product[3]) }}</td>
             <td>{{ product[4] }}</td>
+            {% if permissions and permissions.can_delete %}
             <td>
                 <a href="{{ url_for('delete_product', product_id=product[0]) }}" 
                    class="btn btn-danger" 
                    style="padding: 0.4rem 0.8rem;"
                    onclick="return confirm('Are you sure?')">Delete</a>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>

@@ -5,9 +5,11 @@
 {% block content %}
 <h1>Warehouses</h1>
 
+{% if permissions and permissions.can_add %}
 <div class="actions">
     <a href="{{ url_for('add_warehouse') }}" class="btn btn-success">Add New Warehouse</a>
 </div>
+{% endif %}
 
 <table>
     <thead>

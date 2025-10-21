@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -46,17 +46,17 @@
         }
         
         nav a:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(44, 82, 130, 0.4);
         }
         
         nav .logo {
             font-size: 1.5rem;
             font-weight: bold;
             margin-right: auto;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -103,7 +103,7 @@
         .btn {
             display: inline-block;
             padding: 0.8rem 1.8rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             color: white;
             text-decoration: none;
             border: none;
@@ -154,7 +154,7 @@
         }
         
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             color: white;
             font-weight: 600;
             text-transform: uppercase;
@@ -208,7 +208,7 @@
             left: 0;
             width: 60px;
             height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             border-radius: 2px;
         }
         
@@ -240,7 +240,7 @@
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2c5282;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             transform: translateY(-2px);
         }
@@ -278,7 +278,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #2c5282 0%, #1e3c72 100%);
         }
         
         .stat-card:hover {
@@ -298,7 +298,7 @@
         .stat-card .number {
             font-size: 2.5rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -328,12 +328,12 @@
         }
         
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
             border-radius: 5px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2c5282 100%);
         }
         
         td form {
@@ -394,6 +394,16 @@
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('orders') }}">Orders</a></li>
             <li><a href="{{ url_for('analytics') }}">Analytics</a></li>
+            {% if session.get('user_id') %}
+                {% if session.get('role') == 'ADMIN' %}
+                    <li><a href="{{ url_for('users') }}">Users</a></li>
+                {% endif %}
+                <li style="margin-left: auto; display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: #2c5282; font-weight: 600;">{{ session.get('full_name') }}</span>
+                    <span style="padding: 0.3rem 0.8rem; background: rgba(102, 126, 234, 0.1); border-radius: 20px; font-size: 0.85rem; color: #2c5282;">{{ session.get('role') }}</span>
+                    <a href="{{ url_for('logout') }}" style="color: #e74c3c;">Logout</a>
+                </li>
+            {% endif %}
         </ul>
     </nav>
     
@@ -410,3 +420,4 @@
     </div>
 </body>
 </html>
+

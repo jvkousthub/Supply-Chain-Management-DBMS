@@ -15,6 +15,7 @@
     <p><strong>Total Amount:</strong> ${{ "%.2f"|format(order[5]) if order[5] else '0.00' }}</p>
     <p><strong>Delivery Date:</strong> {{ order[6]|string if order[6] else 'Not set' }}</p>
     
+    {% if permissions and permissions.can_edit %}
     <h3 style="margin-top: 2rem;">Update Status</h3>
     <form method="POST" action="{{ url_for('update_order_status', order_id=order[0]) }}">
         <div style="display: flex; gap: 1rem; align-items: end;">
@@ -31,6 +32,7 @@
             <button type="submit" class="btn btn-success">Update</button>
         </div>
     </form>
+    {% endif %}
 </div>
 
 <div class="card">
