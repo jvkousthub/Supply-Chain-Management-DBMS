@@ -35,7 +35,7 @@
                 <option value="ADMIN">Admin (Full Access)</option>
                 <option value="MANAGER">Manager (View, Add, Edit)</option>
                 <option value="WAREHOUSE">Warehouse (Inventory Only)</option>
-                <option value="VIEWER">Viewer (Read-Only)</option>
+                <option value="CUSTOMER">Customer (Read-Only)</option>
             </select>
         </div>
         
@@ -52,7 +52,7 @@
         <li><strong>Admin:</strong> Full system access including user management and deletions</li>
         <li><strong>Manager:</strong> Can view all data, add products/orders, update records but cannot delete</li>
         <li><strong>Warehouse:</strong> Limited to inventory management - view and update stock levels only</li>
-        <li><strong>Viewer:</strong> Read-only access to all data and reports</li>
+        <li><strong>Customer:</strong> Read-only access to all data and reports (external users)</li>
     </ul>
 </div>
 {% endblock %}

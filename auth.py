@@ -159,7 +159,7 @@ def get_permissions(role):
             'can_manage_users': False,
             'can_view_audit': False
         },
-        'VIEWER': {
+        'CUSTOMER': {
             'can_view': True,
             'can_add': False,
             'can_edit': False,
@@ -169,4 +169,4 @@ def get_permissions(role):
         }
     }
     
-    return permissions.get(role, permissions['VIEWER'])
+    return permissions.get(role, permissions['CUSTOMER'])

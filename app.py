@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from database import Database
 from auth import AuthManager, login_required, role_required, get_permissions
+from chat_manager import ChatManager
 import os
 from pathlib import Path
 
@@ -15,6 +17,10 @@ if env_path.exists():
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
+app.config['SECRET_KEY'] = app.secret_key
+
+# Initialize Socket.IO with gevent for Python 3.12 compatibility
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 DB_USER = os.getenv('DB_USER', 'your_username')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'your_password')
@@ -24,6 +30,7 @@ print(f"Connecting to Oracle as: {DB_USER}@{DB_DSN}")
 
 db = Database(DB_USER, DB_PASSWORD, DB_DSN)
 auth = AuthManager(db)
+chat = ChatManager(db)
 
 @app.before_request
 def before_request():
@@ -33,9 +40,19 @@ def before_request():
 
 @app.context_processor
 def inject_permissions():
+    context = {}
     if 'role' in session:
-        return {'permissions': get_permissions(session['role'])}
-    return {'permissions': None}
+        context['permissions'] = get_permissions(session['role'])
+        context['user_id'] = session.get('user_id')
+        # Get unread message count
+        if 'user_id' in session:
+            context['unread_count'] = chat.get_unread_count(session['user_id'])
+        else:
+            context['unread_count'] = 0
+    else:
+        context['permissions'] = None
+        context['unread_count'] = 0
+    return context
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -332,5 +349,200 @@ def toggle_user(user_id):
         flash('Failed to update user status', 'error')
     return redirect(url_for('users'))
 
+# ==================== CHAT ROUTES ====================
+
+@app.route('/chat')
+@login_required
+def chat_page():
+    """Main chat interface"""
+    users = chat.get_all_users_for_chat(session['user_id'])
+    messages = chat.get_user_messages(session['user_id'], limit=100)
+    return render_template('chat.html', users=users, messages=messages)
+
+@app.route('/api/messages')
+@login_required
+def get_messages():
+    """API endpoint to get user messages"""
+    unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+    messages = chat.get_user_messages(session['user_id'], limit=100, unread_only=unread_only)
+    
+    # Dates are already converted to strings in chat_manager.py
+    return jsonify({
+        'messages': messages,
+        'unread_count': chat.get_unread_count(session['user_id'])
+    })
+
+@app.route('/api/messages/send', methods=['POST'])
+@login_required
+def send_message_api():
+    """API endpoint to send message"""
+    data = request.get_json()
+    
+    message_text = data.get('message_text')
+    recipient_ids = data.get('recipient_ids', [])
+    message_type = data.get('message_type', 'GENERAL')
+    priority = data.get('priority', 'NORMAL')
+    is_broadcast = data.get('is_broadcast', False)
+    
+    if not message_text:
+        return jsonify({'success': False, 'error': 'Message text is required'}), 400
+    
+    message_id = chat.send_message(
+        sender_id=session['user_id'],
+        message_text=message_text,
+        recipient_ids=recipient_ids if recipient_ids else None,
+        message_type=message_type,
+        priority=priority,
+        is_broadcast=is_broadcast
+    )
+    
+    if message_id:
+        from datetime import datetime
+        # Prepare message data for real-time broadcast
+        message_data = {
+            'message_id': message_id,
+            'sender_id': session['user_id'],
+            'sender_name': session['full_name'],
+            'sender_username': session['username'],
+            'sender_role': session['role'],
+            'message_text': message_text,
+            'message_type': message_type,
+            'priority': priority,
+            'is_broadcast': is_broadcast,
+            'sent_at': datetime.now().strftime('%b %d, %H:%M'),
+            'recipient_ids': recipient_ids
+        }
+        
+        # Emit to all connected clients (they will filter on client-side)
+        socketio.emit('new_message', message_data, namespace='/')
+        
+        return jsonify({'success': True, 'message_id': message_id})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to send message'}), 500
+
+@app.route('/api/messages/<int:recipient_id>/read', methods=['POST'])
+@login_required
+def mark_message_read(recipient_id):
+    """Mark a message as read"""
+    if chat.mark_as_read(recipient_id, session['user_id']):
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 500
+
+@app.route('/api/messages/read-all', methods=['POST'])
+@login_required
+def mark_all_read():
+    """Mark all messages as read"""
+    if chat.mark_all_as_read(session['user_id']):
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 500
+
+@app.route('/api/users/role/<role>')
+@login_required
+def get_users_by_role(role):
+    """Get users by role - for admin broadcasting"""
+    if session.get('role') not in ['ADMIN', 'MANAGER']:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    users = chat.get_users_by_role(role)
+    return jsonify({'users': users})
+
+@app.route('/api/conversation/<int:user_id>')
+@login_required
+def get_conversation(user_id):
+    """Get conversation with a specific user"""
+    messages = chat.get_conversation(session['user_id'], user_id, limit=50)
+    
+    # sent_at is already converted to string in chat_manager.py
+    return jsonify({'messages': messages})
+
+# ==================== SOCKET.IO EVENTS ====================
+
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection"""
+    if 'user_id' in session:
+        join_room(f"user_{session['user_id']}")
+        emit('connected', {'user_id': session['user_id']})
+        print(f"User {session['username']} connected to chat")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection"""
+    if 'user_id' in session:
+        leave_room(f"user_{session['user_id']}")
+        print(f"User {session['username']} disconnected from chat")
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    """Handle real-time message sending via Socket.IO"""
+    if 'user_id' not in session:
+        emit('error', {'message': 'Not authenticated'})
+        return
+    
+    message_text = data.get('message_text')
+    recipient_ids = data.get('recipient_ids', [])
+    message_type = data.get('message_type', 'GENERAL')
+    priority = data.get('priority', 'NORMAL')
+    is_broadcast = data.get('is_broadcast', False)
+    
+    message_id = chat.send_message(
+        sender_id=session['user_id'],
+        message_text=message_text,
+        recipient_ids=recipient_ids if recipient_ids else None,
+        message_type=message_type,
+        priority=priority,
+        is_broadcast=is_broadcast
+    )
+    
+    if message_id:
+        from datetime import datetime
+        message_data = {
+            'message_id': message_id,
+            'sender_id': session['user_id'],
+            'sender_name': session['full_name'],
+            'sender_username': session['username'],
+            'sender_role': session['role'],
+            'message_text': message_text,
+            'message_type': message_type,
+            'priority': priority,
+            'is_broadcast': is_broadcast,
+            'sent_at': datetime.now().strftime('%b %d, %H:%M'),
+            'recipient_ids': recipient_ids  # Include recipient_ids for client-side filtering
+        }
+        
+        # Send to sender first so they see it immediately
+        emit('new_message', message_data)
+        
+        # Send to specific recipients or broadcast
+        if is_broadcast or not recipient_ids:
+            emit('new_message', message_data, broadcast=True, include_self=False)
+        else:
+            # Send to each recipient
+            for recipient_id in recipient_ids:
+                if recipient_id != session['user_id']:  # Don't send to self again
+                    emit('new_message', message_data, room=f"user_{recipient_id}")
+        
+        # Confirm message sent
+        emit('message_sent', {'success': True, 'message_id': message_id})
+    else:
+        emit('message_sent', {'success': False, 'error': 'Failed to send message'})
+
+@socketio.on('mark_read')
+def handle_mark_read(data):
+    """Mark message as read"""
+    recipient_id = data.get('recipient_id')
+    if recipient_id and chat.mark_as_read(recipient_id, session['user_id']):
+        emit('marked_read', {'success': True, 'recipient_id': recipient_id})
+
+@socketio.on('typing')
+def handle_typing(data):
+    """Broadcast typing indicator"""
+    recipient_id = data.get('recipient_id')
+    if recipient_id:
+        emit('user_typing', {
+            'user_id': session['user_id'],
+            'username': session['username']
+        }, room=f"user_{recipient_id}")
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    socketio.run(app, debug=True, port=5000, host='0.0.0.0')
