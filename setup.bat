@@ -60,13 +60,36 @@ echo.
 
 echo === Setup Complete ===
 echo.
-echo Next steps:
-echo 1. Update .env file with your Oracle database credentials
-echo 2. Run schema.sql in your Oracle database to create tables
-echo 3. Run sample_data.sql to load sample data (optional)
-echo 4. Start the application: run.bat
+echo ✅ All Python packages installed (including Flask-SocketIO + gevent for chat)
 echo.
-echo The application will be available at: http://localhost:5000
+echo Next steps:
+echo.
+echo 1. UPDATE DATABASE CREDENTIALS:
+echo    Edit .env file with your Oracle database credentials
+echo    - DB_USER (e.g., system)
+echo    - DB_PASSWORD (your Oracle password)
+echo    - DB_DSN (e.g., localhost:1521/XE)
+echo    - SECRET_KEY (generate a random key for production)
+echo.
+echo 2. SETUP DATABASE SCHEMA:
+echo    Run these SQL scripts in Oracle SQL*Plus or SQL Developer:
+echo    a. sqlplus system/password@localhost:1521/XE
+echo    b. @schema.sql              (Main database tables)
+echo    c. @sample_data.sql         (Sample data - optional)
+echo    d. @add_authentication.sql  (User authentication)
+echo    e. @chat_schema.sql         (Chat system - NEW!)
+echo    f. @migrate_viewer_to_customer.sql (Update roles)
+echo    g. exit
+echo.
+echo 3. START THE APPLICATION:
+echo    run.bat
+echo.
+echo 4. ACCESS THE APPLICATION:
+echo    Open browser: http://localhost:5000
+echo    Default login: admin / password123
+echo.
+echo 📝 For detailed documentation, see README.md
+echo 🏗️  For architecture diagrams, see ARCHITECTURE_DIAGRAMS.md
 echo.
 
 pause
