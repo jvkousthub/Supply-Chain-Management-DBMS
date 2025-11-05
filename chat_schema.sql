@@ -1,10 +1,8 @@
--- Chat System Schema for Supply Chain Management
--- Drop existing tables if they exist
 DROP TABLE message_recipients CASCADE CONSTRAINTS;
 DROP TABLE messages CASCADE CONSTRAINTS;
 DROP TABLE chat_rooms CASCADE CONSTRAINTS;
 
--- Chat Rooms table (optional for group conversations)
+
 CREATE TABLE chat_rooms (
     room_id NUMBER PRIMARY KEY,
     room_name VARCHAR2(100) NOT NULL,

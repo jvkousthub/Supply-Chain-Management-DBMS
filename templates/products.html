@@ -31,9 +31,9 @@
             <td>{{ product[0] }}</td>
             <td>{{ product[1] }}</td>
             <td>{{ product[2] }}</td>
-            <td>{{ product[5] }}</td>
-            <td>${{ "%.2f"|format(product[3]) }}</td>
-            <td>{{ product[4] }}</td>
+            <td>{{ product[5] if product[5] else 'N/A' }}</td>
+            <td>${{ "%.2f"|format(product[3] if product[3] else 0) }}</td>
+            <td>{{ product[4] if product[4] else '' }}</td>
             {% if permissions and permissions.can_delete %}
             <td>
                 <a href="{{ url_for('delete_product', product_id=product[0]) }}" 

@@ -75,11 +75,10 @@ echo 2. SETUP DATABASE SCHEMA:
 echo    Run these SQL scripts in Oracle SQL*Plus or SQL Developer:
 echo    a. sqlplus system/password@localhost:1521/XE
 echo    b. @schema.sql              (Main database tables)
-echo    c. @sample_data.sql         (Sample data - optional)
-echo    d. @add_authentication.sql  (User authentication)
-echo    e. @chat_schema.sql         (Chat system - NEW!)
-echo    f. @migrate_viewer_to_customer.sql (Update roles)
-echo    g. exit
+echo    c. @add_authentication.sql  (User authentication)
+echo    d. @chat_schema.sql         (Chat system)
+echo    e. @sample_data.sql         (Sample data - optional)
+echo    f. exit
 echo.
 echo 3. START THE APPLICATION:
 echo    run.bat
@@ -89,7 +88,6 @@ echo    Open browser: http://localhost:5000
 echo    Default login: admin / password123
 echo.
 echo 📝 For detailed documentation, see README.md
-echo 🏗️  For architecture diagrams, see ARCHITECTURE_DIAGRAMS.md
 echo.
 
 pause

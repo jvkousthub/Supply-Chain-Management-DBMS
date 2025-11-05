@@ -101,6 +101,9 @@ def index():
 @login_required
 def suppliers():
     suppliers = db.get_all_suppliers()
+    if suppliers is None:
+        suppliers = []
+        flash('Could not retrieve suppliers. Check database connection.', 'error')
     return render_template('suppliers.html', suppliers=suppliers)
 
 @app.route('/suppliers/add', methods=['GET', 'POST'])
@@ -164,8 +167,16 @@ def delete_supplier(supplier_id):
 @app.route('/products')
 @login_required
 def products():
-    products = db.get_all_products()
-    return render_template('products.html', products=products)
+    try:
+        products = db.get_all_products()
+        if products is None:
+            products = []
+            flash('Could not retrieve products. Check database connection.', 'error')
+        return render_template('products.html', products=products)
+    except Exception as e:
+        print(f"Error in products route: {e}")
+        flash(f'Error loading products: {str(e)}', 'error')
+        return render_template('products.html', products=[])
 
 @app.route('/products/add', methods=['GET', 'POST'])
 @role_required('ADMIN', 'MANAGER')
@@ -203,6 +214,9 @@ def delete_product(product_id):
 @login_required
 def warehouses():
     warehouses = db.get_all_warehouses()
+    if warehouses is None:
+        warehouses = []
+        flash('Could not retrieve warehouses. Check database connection.', 'error')
     return render_template('warehouses.html', warehouses=warehouses)
 
 @app.route('/warehouses/add', methods=['GET', 'POST'])
@@ -230,12 +244,18 @@ def add_warehouse():
 @login_required
 def inventory():
     inventory = db.get_inventory_status()
+    if inventory is None:
+        inventory = []
+        flash('Could not retrieve inventory. Check database connection.', 'error')
     return render_template('inventory.html', inventory=inventory)
 
 @app.route('/inventory/low-stock')
 @login_required
 def low_stock():
     items = db.get_low_stock()
+    if items is None:
+        items = []
+        flash('Could not retrieve low stock items.', 'error')
     return render_template('low_stock.html', items=items)
 
 @app.route('/inventory/update/<int:inventory_id>', methods=['POST'])
@@ -254,6 +274,9 @@ def update_inventory(inventory_id):
 @login_required
 def orders():
     orders = db.get_all_orders()
+    if orders is None:
+        orders = []
+        flash('Could not retrieve orders. Check database connection.', 'error')
     return render_template('orders.html', orders=orders)
 
 @app.route('/orders/create', methods=['GET', 'POST'])
@@ -275,6 +298,12 @@ def create_order():
     
     suppliers = db.get_all_suppliers()
     warehouses = db.get_all_warehouses()
+    
+    if suppliers is None:
+        suppliers = []
+    if warehouses is None:
+        warehouses = []
+    
     return render_template('create_order.html', suppliers=suppliers, warehouses=warehouses)
 
 @app.route('/orders/<int:order_id>')
@@ -299,18 +328,47 @@ def update_order_status(order_id):
 @app.route('/analytics')
 @login_required
 def analytics():
+    # Get summary KPIs
+    summary = db.get_analytics_summary()
+    
+    # Get detailed analytics
     category_data = db.get_inventory_by_category()
     top_suppliers = db.get_top_suppliers()
     warehouse_util = db.get_warehouse_utilization()
     order_status = db.get_orders_by_status()
     reorder_needed = db.get_products_needing_reorder()
+    recent_orders = db.get_recent_orders(10)
+    revenue_by_month = db.get_revenue_by_month(6)
+    top_products = db.get_top_products_by_value(10)
+    
+    # Handle None values with empty lists
+    if category_data is None:
+        category_data = []
+    if top_suppliers is None:
+        top_suppliers = []
+    if warehouse_util is None:
+        warehouse_util = []
+    if order_status is None:
+        order_status = []
+    if reorder_needed is None:
+        reorder_needed = []
+    if recent_orders is None:
+        recent_orders = []
+    if revenue_by_month is None:
+        revenue_by_month = []
+    if top_products is None:
+        top_products = []
     
     return render_template('analytics.html', 
+                         summary=summary,
                          category_data=category_data,
                          top_suppliers=top_suppliers,
                          warehouse_util=warehouse_util,
                          order_status=order_status,
-                         reorder_needed=reorder_needed)
+                         reorder_needed=reorder_needed,
+                         recent_orders=recent_orders,
+                         revenue_by_month=revenue_by_month,
+                         top_products=top_products)
 
 @app.route('/users')
 @role_required('ADMIN')

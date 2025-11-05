@@ -273,3 +273,27 @@ class ChatManager:
         except Exception as e:
             print(f"Error getting users for chat: {e}")
             return []
+    
+    def get_users_by_role(self, role):
+        """Get list of users filtered by role"""
+        try:
+            users = self.db.execute_query(
+                "SELECT user_id, username, full_name, role FROM app_users WHERE is_active = 1 AND role = :1 ORDER BY username",
+                [role]
+            )
+            
+            user_list = []
+            if users:
+                for row in users:
+                    user_list.append({
+                        'user_id': int(row[0]),
+                        'username': str(row[1]),
+                        'full_name': str(row[2]),
+                        'role': str(row[3])
+                    })
+            
+            return user_list
+            
+        except Exception as e:
+            print(f"Error getting users by role: {e}")
+            return []

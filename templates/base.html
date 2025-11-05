@@ -195,9 +195,21 @@
         
         h1, h2 {
             margin-bottom: 1.5rem;
-            color: #2c3e50;
+            color: #ffffff;
             position: relative;
             padding-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+        
+        /* Dark headings for content inside white cards */
+        .card h1, .card h2 {
+            color: #2c3e50;
+            text-shadow: none;
+        }
+        
+        .card h1::after, .card h2::after {
+            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
         }
         
         h1::after, h2::after {
@@ -207,7 +219,7 @@
             left: 0;
             width: 60px;
             height: 4px;
-            background: linear-gradient(135deg, #2c5282 0%, #1e3c72 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
             border-radius: 2px;
         }
         

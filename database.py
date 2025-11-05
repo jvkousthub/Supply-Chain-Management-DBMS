@@ -33,6 +33,9 @@ class Database:
             self.connection.close()
     
     def execute_query(self, query, params=None):
+        if not self.connection:
+            print("No database connection available")
+            return None
         cursor = self.connection.cursor()
         try:
             if params:
@@ -47,6 +50,9 @@ class Database:
             cursor.close()
     
     def execute_update(self, query, params=None):
+        if not self.connection:
+            print("No database connection available")
+            return False
         cursor = self.connection.cursor()
         try:
             if params:
@@ -86,6 +92,7 @@ class Database:
         return self.execute_update(query, (supplier_id,))
 
     def get_all_products(self):
+        # Query for the correct schema from schema.sql
         query = """
         SELECT p.product_id, p.name, p.category, p.unit_price, p.description, s.name as supplier_name
         FROM products p
@@ -95,6 +102,7 @@ class Database:
         return self.execute_query(query)
     
     def add_product(self, name, category, supplier_id, price, description):
+        # Use correct schema columns: name, category, supplier_id, unit_price, description
         query = """
         INSERT INTO products (product_id, name, category, supplier_id, unit_price, description)
         VALUES (product_seq.NEXTVAL, :1, :2, :3, :4, :5)
@@ -210,6 +218,7 @@ class Database:
         GROUP BY s.supplier_id, s.name, s.rating
         HAVING COUNT(o.order_id) > 0
         ORDER BY total_value DESC
+        FETCH FIRST 10 ROWS ONLY
         """
         return self.execute_query(query)
     
@@ -220,6 +229,7 @@ class Database:
                ROUND((SELECT COUNT(*) FROM inventory WHERE warehouse_id = w.warehouse_id) / w.capacity * 100, 2) as utilization_pct
         FROM warehouses w
         ORDER BY utilization_pct DESC
+        FETCH FIRST 10 ROWS ONLY
         """
         return self.execute_query(query)
     
@@ -243,3 +253,62 @@ class Database:
         ORDER BY shortage DESC
         """
         return self.execute_query(query)
+    
+    def get_analytics_summary(self):
+        """Get summary KPIs for analytics dashboard"""
+        query = """
+        SELECT 
+            (SELECT COUNT(*) FROM products) as total_products,
+            (SELECT COUNT(*) FROM suppliers) as total_suppliers,
+            (SELECT COUNT(*) FROM warehouses) as total_warehouses,
+            (SELECT COUNT(*) FROM orders) as total_orders,
+            (SELECT NVL(SUM(total_amount), 0) FROM orders) as total_order_value,
+            (SELECT COUNT(*) FROM orders WHERE status = 'PENDING') as pending_orders,
+            (SELECT COUNT(*) FROM inventory WHERE quantity < reorder_level) as low_stock_items,
+            (SELECT NVL(SUM(i.quantity * p.unit_price), 0) 
+             FROM inventory i JOIN products p ON i.product_id = p.product_id) as total_inventory_value
+        FROM dual
+        """
+        result = self.execute_query(query)
+        return result[0] if result else None
+    
+    def get_recent_orders(self, limit=10):
+        """Get recent orders for analytics"""
+        query = """
+        SELECT o.order_id, s.name as supplier_name, o.order_date, 
+               o.status, o.total_amount
+        FROM orders o
+        JOIN suppliers s ON o.supplier_id = s.supplier_id
+        ORDER BY o.order_date DESC
+        FETCH FIRST :limit ROWS ONLY
+        """
+        return self.execute_query(query, {'limit': limit})
+    
+    def get_revenue_by_month(self, months=6):
+        """Get revenue by month for trend analysis"""
+        query = """
+        SELECT TO_CHAR(order_date, 'Mon YYYY') as month,
+               COUNT(*) as order_count,
+               NVL(SUM(total_amount), 0) as revenue
+        FROM orders
+        WHERE order_date >= ADD_MONTHS(SYSDATE, -:months)
+        GROUP BY TO_CHAR(order_date, 'Mon YYYY'), TO_CHAR(order_date, 'YYYYMM')
+        ORDER BY TO_CHAR(order_date, 'YYYYMM') DESC
+        """
+        return self.execute_query(query, {'months': months})
+    
+    def get_top_products_by_value(self, limit=10):
+        """Get top products by inventory value"""
+        query = """
+        SELECT p.name, p.category, 
+               SUM(i.quantity) as total_quantity,
+               p.unit_price,
+               SUM(i.quantity * p.unit_price) as total_value
+        FROM products p
+        JOIN inventory i ON p.product_id = i.product_id
+        GROUP BY p.product_id, p.name, p.category, p.unit_price
+        ORDER BY total_value DESC
+        FETCH FIRST :limit ROWS ONLY
+        """
+        return self.execute_query(query, {'limit': limit})
+
